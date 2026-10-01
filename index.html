@@ -65,7 +65,7 @@
   <div class="grp">Nézet</div>
   <div class="btns" id="viewBtns"><button data-v="walk" class="on">Bejárás</button><button data-v="doll">Makett (felülnézet)</button></div>
   <div class="grp">Fényerő (expozíció)</div>
-  <input type="range" id="expo" min="0.4" max="2.2" step="0.02" value="0.88">
+  <input type="range" id="expo" min="0.4" max="2.2" step="0.02" value="0.44">
   <div class="grp">Minőség</div>
   <div class="btns" id="qBtns"><button data-q="1">Normál</button><button data-q="2" class="on">Magas</button></div>
 </div>
@@ -610,7 +610,6 @@ B(3.32,0,1.64,3.92,H,2.88,MAT.white,{solid:true});
 for(const z of [2.07,2.49])B(3.918,.05,z-.002,3.922,H-.05,z+.002,MAT.greige,{cast:false});
 B(3.92,.45,1.64,3.925,.46,2.88,GLOW.led,{cast:false});
 B(4.02,.95,4.5,4.03,2.1,5.3,MAT.oak);B(4.03,.97,4.52,4.035,2.08,5.28,MAT.mirror,{cast:false});
-B(4.02,.42,4.4,4.42,.47,5.6,MAT.wood,{uv:1,solid:true});R(4.22,.52,5.0,.36,.08,1.1,.03,MAT.fabricSage);
 floorRect(4.25,2.2,4.95,6.9,MAT.rugBed,1.5,.006);
 spot(4.5,H-.03,3.0,4.5,0,3.0,30,1.2,1,true);point(4.55,2.4,6.2,5,3.2);
 for(const [x,z] of [[4.5,3.0],[4.55,4.8],[4.55,6.6]])downlight(x,z);
