@@ -66,6 +66,8 @@
   <div class="btns" id="viewBtns"><button data-v="walk" class="on">Bejárás</button><button data-v="doll">Makett (felülnézet)</button></div>
   <div class="grp">Fényerő (expozíció)</div>
   <input type="range" id="expo" min="0.4" max="2.2" step="0.02" value="0.44">
+  <div class="grp">Látószög</div>
+  <input type="range" id="fov" min="50" max="100" step="1" value="70">
   <div class="grp">Minőség</div>
   <div class="btns" id="qBtns"><button data-q="1">Normál</button><button data-q="2" class="on">Magas</button></div>
 </div>
@@ -1047,6 +1049,7 @@ canvas.addEventListener('wheel',e=>{if(view==='doll'){orbit.r=Math.max(8,Math.mi
 // Android / iOS / iPadOS (az iPadOS Macintoshnak jelentkezik, ezért az érintőpontok száma is számít)
 const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)||!!(navigator.userAgentData&&navigator.userAgentData.mobile);
 document.body.classList.toggle('mobile',isMobile);document.body.classList.add('walk');
+if(isMobile){camera.fov=80;camera.updateProjectionMatrix();document.getElementById('fov').value=80;}
 const joy={x:0,y:0,on:false};
 let lookId=null,lookX=0,lookY=0;
 canvas.addEventListener('touchstart',e=>{if(lookId!==null)return;const t=e.changedTouches[0];lookId=t.identifier;lookX=t.clientX;lookY=t.clientY;document.body.classList.remove('menu');},{passive:true});
@@ -1075,6 +1078,7 @@ for(const rm of ROOMS){const b=document.createElement('button');b.textContent=rm
 document.querySelectorAll('#modeBtns button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 document.querySelectorAll('#viewBtns button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
 document.getElementById('expo').oninput=()=>{renderer.toneMappingExposure=MODES[curMode].expo*+document.getElementById('expo').value;};
+document.getElementById('fov').oninput=e=>{camera.fov=+e.target.value;camera.updateProjectionMatrix();};
 document.querySelectorAll('#qBtns button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#qBtns button').forEach(x=>x.classList.toggle('on',x===b));
   renderer.setPixelRatio(b.dataset.q==='2'?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio,1)*.85);renderer.setSize(innerWidth,innerHeight);});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
