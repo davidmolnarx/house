@@ -1083,17 +1083,17 @@ document.querySelectorAll('#qBtns button').forEach(b=>b.onclick=()=>{document.qu
   renderer.setPixelRatio(b.dataset.q==='2'?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio,1)*.85);renderer.setSize(innerWidth,innerHeight);});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 
-const mapC=document.getElementById('map'),mg=mapC.getContext('2d'),MS=13.5,OX=22,OZ=18;
-const mx=x=>OX+x*MS,my=z=>(OZ-z)*MS+14;
+const mapC=document.getElementById('map'),mg=mapC.getContext('2d'),MS=13.5,OX=180,OY=254;
+const mx=x=>OX-x*MS,my=z=>OY-z*MS;
 const wallRects=solids.slice();let curRoom=null;
 function drawMap(){mg.clearRect(0,0,mapC.width,mapC.height);
   for(const rm of ROOMS)for(const r of rm.r){mg.fillStyle=rm.out?'rgba(200,190,170,.25)':(rm===curRoom?'rgba(201,138,90,.55)':'rgba(240,230,215,.18)');
-    mg.fillRect(mx(r[0]),my(r[3]),(r[2]-r[0])*MS,(r[3]-r[1])*MS);}
-  mg.fillStyle='#e9e2d6';for(const r of wallRects){const w=(r[2]-r[0])*MS,h=(r[3]-r[1])*MS;if(w*h<400)mg.fillRect(mx(r[0]),my(r[3]),w,h);}
+    mg.fillRect(mx(r[2]),my(r[3]),(r[2]-r[0])*MS,(r[3]-r[1])*MS);}
+  mg.fillStyle='#e9e2d6';for(const r of wallRects){const w=(r[2]-r[0])*MS,h=(r[3]-r[1])*MS;if(w*h<400)mg.fillRect(mx(r[2]),my(r[3]),w,h);}
   const px=mx(player.x),py=my(player.z);mg.fillStyle='#ffb070';mg.beginPath();mg.arc(px,py,4.5,0,7);mg.fill();
-  const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);mg.strokeStyle='#ffb070';mg.lineWidth=2;mg.beginPath();mg.moveTo(px,py);mg.lineTo(px+fx*16,py-fz*16);mg.stroke();
-  mg.fillStyle='rgba(255,255,255,.6)';mg.font='10px Segoe UI';mg.fillText('É ↑ kert',8,12);mg.fillText('Petőfi S. u. ↓',8,mapC.height-5);}
-mapC.addEventListener('click',e=>{const b=mapC.getBoundingClientRect(),k=mapC.width/b.width;const X=((e.clientX-b.left)*k-OX)/MS,Z=OZ-((e.clientY-b.top)*k-14)/MS;
+  const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);mg.strokeStyle='#ffb070';mg.lineWidth=2;mg.beginPath();mg.moveTo(px,py);mg.lineTo(px-fx*16,py-fz*16);mg.stroke();
+  mg.fillStyle='rgba(255,255,255,.6)';mg.font='10px Segoe UI';mg.fillText('kert ↑',8,12);mg.fillText('Petőfi S. u. ↓',8,mapC.height-5);}
+mapC.addEventListener('click',e=>{const b=mapC.getBoundingClientRect(),k=mapC.width/b.width;const X=(OX-(e.clientX-b.left)*k)/MS,Z=(OY-(e.clientY-b.top)*k)/MS;
   if(!blocked(X,Z)&&roomAt(X,Z)){player.x=X;player.z=Z;if(view!=='walk')setView('walk');}});
 
 const roomEl=document.getElementById('room');const clock=new T.Clock();let mapT=0;
