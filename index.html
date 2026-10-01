@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>L1 lakás – belső látványterv | Rábapaty, Petőfi S. u.</title>
 <style>
   :root{--bg:rgba(20,18,16,.72);--fg:#f3eee6;--acc:#c98a5a;}
@@ -30,12 +30,28 @@
   #start p{margin:6px 0;opacity:.8;font-size:13.5px;line-height:1.5}
   #start .go{margin-top:14px;display:inline-block;background:var(--acc);color:#1a120c;padding:9px 20px;border-radius:9px;font-weight:600}
   body.clean .panel,body.clean #cross{display:none!important}
+  #joy{position:absolute;left:28px;bottom:28px;width:130px;height:130px;border-radius:50%;background:rgba(20,18,16,.45);border:2px solid rgba(255,255,255,.25);touch-action:none;display:none;z-index:5}
+  #joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(201,138,90,.85);border:1px solid rgba(255,255,255,.4);pointer-events:none}
+  #menuBtn{position:absolute;top:14px;left:14px;display:none;z-index:6;padding:9px 13px;font-size:16px}
+  canvas#c{touch-action:none}
+  body.mobile #help,body.mobile .desk{display:none!important}
+  body.mobile .mob{display:block!important}
+  body.mobile #menuBtn{display:block}
+  body.mobile #left{display:none;top:58px;max-height:calc(100% - 80px);overflow:auto;z-index:6}
+  body.mobile.menu #left{display:block}
+  body.mobile.walk #joy{display:block}
+  body.mobile #room{top:14px;left:auto;right:14px;transform:none;font-size:12px;max-width:45vw;text-align:right}
+  body.mobile #mapWrap{padding:5px;bottom:14px;right:14px}
+  body.mobile #map{width:120px;height:auto}
+  .mob{display:none}
   #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#1b1917;padding:30px;text-align:center;line-height:1.6}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="cross"></div>
+<button id="menuBtn" class="panel">☰</button>
+<div id="joy"><i></i></div>
 <div id="left" class="panel">
   <h1>L1 lakás – belső látványterv</h1>
   <div class="sub">Rábapaty, Petőfi S. u. · Hrsz. 1069/1 · 92,56 m²</div>
@@ -59,7 +75,8 @@
 <div id="start"><div class="card">
   <h2>Belső látványterv – L1 lakás</h2>
   <p>Az alaprajzi vázlat (4. változat) alapján, a homlokzati látványtervek anyagaihoz igazítva: meleg fehér falak, barna fa nyílászárók, rakott kő burkolat, travertin hatású lapburkolat és tölgy laminált parketta.</p>
-  <p>Egér + billentyűzet ajánlott.</p>
+  <p class="desk">Egér + billentyűzet ajánlott.</p>
+  <p class="mob">Mozgás: joystick (bal alsó sarok) · Körbenézés: húzd az ujjad a képen · Menü: ☰</p>
   <span class="go">Bejárás indítása</span>
 </div></div>
 <div id="err"><div>
@@ -1025,13 +1042,28 @@ addEventListener('mousemove',e=>{
     player.yaw-=dx*.0022;player.pitch=Math.max(-1.35,Math.min(1.35,player.pitch-dy*.0022));}
   else if(drag){const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;orbit.th-=dx*.005;orbit.ph=Math.max(.15,Math.min(1.45,orbit.ph-dy*.005));}});
 canvas.addEventListener('wheel',e=>{if(view==='doll'){orbit.r=Math.max(8,Math.min(45,orbit.r*(1+Math.sign(e.deltaY)*.08)));e.preventDefault();}},{passive:false});
-let tp=null;canvas.addEventListener('touchstart',e=>{tp=[...e.touches].map(t=>[t.clientX,t.clientY]);},{passive:true});
-canvas.addEventListener('touchmove',e=>{const t=e.touches[0];if(!tp)return;const dx=t.clientX-tp[0][0],dy=t.clientY-tp[0][1];
-  if(view==='walk'){if(e.touches.length>1)keys.TouchFwd=true;else{player.yaw-=dx*.004;player.pitch=Math.max(-1.3,Math.min(1.3,player.pitch-dy*.004));}}
-  else{orbit.th-=dx*.006;orbit.ph=Math.max(.15,Math.min(1.45,orbit.ph-dy*.006));}
-  tp=[...e.touches].map(t=>[t.clientX,t.clientY]);},{passive:true});
-canvas.addEventListener('touchend',()=>{keys.TouchFwd=false;tp=null;},{passive:true});
-function setView(v){view=v;document.querySelectorAll('#viewBtns button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+// Android / iOS / iPadOS (az iPadOS Macintoshnak jelentkezik, ezért az érintőpontok száma is számít)
+const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)||!!(navigator.userAgentData&&navigator.userAgentData.mobile);
+document.body.classList.toggle('mobile',isMobile);document.body.classList.add('walk');
+const joy={x:0,y:0,on:false};
+let lookId=null,lookX=0,lookY=0;
+canvas.addEventListener('touchstart',e=>{if(lookId!==null)return;const t=e.changedTouches[0];lookId=t.identifier;lookX=t.clientX;lookY=t.clientY;document.body.classList.remove('menu');},{passive:true});
+canvas.addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier!==lookId)continue;const dx=t.clientX-lookX,dy=t.clientY-lookY;lookX=t.clientX;lookY=t.clientY;
+  if(view==='walk'){player.yaw-=dx*.004;player.pitch=Math.max(-1.3,Math.min(1.3,player.pitch-dy*.004));}
+  else{orbit.th-=dx*.006;orbit.ph=Math.max(.15,Math.min(1.45,orbit.ph-dy*.006));}}},{passive:true});
+const touchEnd=e=>{for(const t of e.changedTouches)if(t.identifier===lookId)lookId=null;};
+canvas.addEventListener('touchend',touchEnd,{passive:true});canvas.addEventListener('touchcancel',touchEnd,{passive:true});
+if(isMobile){
+  const joyEl=document.getElementById('joy'),knob=joyEl.firstElementChild;let joyId=null;
+  const joyMove=t=>{const b=joyEl.getBoundingClientRect(),R=b.width/2-10;let dx=t.clientX-(b.left+b.width/2),dy=t.clientY-(b.top+b.height/2);const d=Math.hypot(dx,dy);
+    if(d>R){dx*=R/d;dy*=R/d;}knob.style.transform='translate('+dx+'px,'+dy+'px)';joy.x=dx/R;joy.y=dy/R;joy.on=true;};
+  const joyEnd=e=>{for(const t of e.changedTouches)if(t.identifier===joyId){joyId=null;joy.on=false;joy.x=joy.y=0;knob.style.transform='';}};
+  joyEl.addEventListener('touchstart',e=>{e.preventDefault();if(joyId!==null)return;const t=e.changedTouches[0];joyId=t.identifier;joyMove(t);},{passive:false});
+  joyEl.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===joyId)joyMove(t);},{passive:false});
+  joyEl.addEventListener('touchend',joyEnd);joyEl.addEventListener('touchcancel',joyEnd);
+  document.getElementById('menuBtn').onclick=()=>document.body.classList.toggle('menu');
+}
+function setView(v){view=v;document.body.classList.toggle('walk',v==='walk');document.querySelectorAll('#viewBtns button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   ceilingGroup.visible=v==='walk';roofGroup.visible=v==='walk';if(v==='doll'&&document.exitPointerLock)document.exitPointerLock();
   renderer.shadowMap.needsUpdate=true;}
 function teleport(rm){player.x=rm.s[0];player.z=rm.s[1];player.yaw=rm.s[2];player.pitch=-.08;if(view!=='walk')setView('walk');}
@@ -1054,16 +1086,18 @@ function drawMap(){mg.clearRect(0,0,mapC.width,mapC.height);
   const px=mx(player.x),py=my(player.z);mg.fillStyle='#ffb070';mg.beginPath();mg.arc(px,py,4.5,0,7);mg.fill();
   const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);mg.strokeStyle='#ffb070';mg.lineWidth=2;mg.beginPath();mg.moveTo(px,py);mg.lineTo(px+fx*16,py-fz*16);mg.stroke();
   mg.fillStyle='rgba(255,255,255,.6)';mg.font='10px Segoe UI';mg.fillText('É ↑ kert',8,12);mg.fillText('Petőfi S. u. ↓',8,mapC.height-5);}
-mapC.addEventListener('click',e=>{const b=mapC.getBoundingClientRect();const X=(e.clientX-b.left-OX)/MS,Z=OZ-(e.clientY-b.top-14)/MS;
+mapC.addEventListener('click',e=>{const b=mapC.getBoundingClientRect(),k=mapC.width/b.width;const X=((e.clientX-b.left)*k-OX)/MS,Z=OZ-((e.clientY-b.top)*k-14)/MS;
   if(!blocked(X,Z)&&roomAt(X,Z)){player.x=X;player.z=Z;if(view!=='walk')setView('walk');}});
 
 const roomEl=document.getElementById('room');const clock=new T.Clock();let mapT=0;
 function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05);
   if(view==='walk'){
     const sp=(keys.ShiftLeft||keys.ShiftRight?3.2:1.6)*dt;let f=0,s=0;
-    if(keys.KeyW||keys.ArrowUp||keys.TouchFwd)f+=1;if(keys.KeyS||keys.ArrowDown)f-=1;if(keys.KeyA||keys.ArrowLeft)s-=1;if(keys.KeyD||keys.ArrowRight)s+=1;
-    if(f||s){const l=Math.hypot(f,s);f/=l;s/=l;const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
-      const dx=(fx*f+rx*s)*sp,dz=(fz*f+rz*s)*sp;if(!blocked(player.x+dx,player.z))player.x+=dx;if(!blocked(player.x,player.z+dz))player.z+=dz;}
+    if(keys.KeyW||keys.ArrowUp)f+=1;if(keys.KeyS||keys.ArrowDown)f-=1;if(keys.KeyA||keys.ArrowLeft)s-=1;if(keys.KeyD||keys.ArrowRight)s+=1;
+    let mag=1;
+    if(joy.on&&(joy.x||joy.y)){f=-joy.y;s=joy.x;mag=Math.min(1,Math.hypot(f,s));}
+    if(f||s){const l=Math.hypot(f,s);f/=l;s/=l;const sp2=sp*(joy.on?mag*(mag>.95?1.6:1):1);const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
+      const dx=(fx*f+rx*s)*sp2,dz=(fz*f+rz*s)*sp2;if(!blocked(player.x+dx,player.z))player.x+=dx;if(!blocked(player.x,player.z+dz))player.z+=dz;}
     const rm=roomAt(player.x,player.z);
     camera.position.set(player.x,EYE,player.z);camera.rotation.set(player.pitch,player.yaw,0);
     if(rm!==curRoom&&rm){curRoom=rm;roomEl.textContent=rm.n;}
