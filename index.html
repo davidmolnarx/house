@@ -549,17 +549,23 @@ function tree(x,z,s){const r=rng((x*31+z*7)|0),th=2.3*s;treePts=[];
     branch(x,by,z,bx,hy,bz,.07*s,.03*s);
     for(let j=0;j<3;j++)leafBlob(bx+(r()-.5)*.9*s,hy+(r()-.3)*.8*s,bz+(r()-.5)*.9*s,(.65+r()*.45)*s,TREE_LEAF[(r()*4)|0],r()*6);}
   for(let j=0;j<4;j++)leafBlob(x+(r()-.5)*.8*s,GROUND+th+(1.1+r()*.9)*s,z+(r()-.5)*.8*s,(.8+r()*.4)*s,TREE_LEAF[(r()*4)|0],r()*6);
-  const per=420,im=new T.InstancedMesh(new T.PlaneGeometry(.13*s,.17*s),leafMaterial(),treePts.length*per),o=new T.Object3D(),col=new T.Color();let k=0;
+  const per=780,im=new T.InstancedMesh(new T.PlaneGeometry(.13*s,.17*s),leafMaterial(),treePts.length*per),o=new T.Object3D(),col=new T.Color();let k=0;
   for(const [bx,by,bz,br] of treePts)for(let i=0;i<per;i++){
     const u=r()*2-1,a=r()*PI*2,q=Math.sqrt(1-u*u),nx=q*Math.cos(a),ny=u,nz=q*Math.sin(a),d=br*(1.02-.65*r()*r());
     o.position.set(bx+nx*d,by+ny*d*.9,bz+nz*d);o.lookAt(o.position.x+nx+(r()-.5),o.position.y+ny+(r()-.5),o.position.z+nz+(r()-.5));
     o.rotateZ(r()*PI*2);o.scale.setScalar(.7+r()*.6);o.updateMatrix();im.setMatrixAt(k,o.matrix);
     col.copy(LEAF_COL[(r()*5)|0]).multiplyScalar(.75+.4*(ny*.5+.5));im.setColorAt(k++,col);}
   im.castShadow=true;root.add(im);}
-function hedge(x0,z0,x1,z1){const n=Math.max(1,Math.round(Math.hypot(x1-x0,z1-z0)/1.1));for(let i=0;i<=n;i++){const t=i/n;Sph(x0+(x1-x0)*t,GROUND+.9,z0+(z1-z0)*t,.75,MAT.leafDark,1,1.5,1);}}
+function bushLeaves(list,seed){const LS=b=>Math.max(.5,b[3]*.9),r=rng(seed),per=list.map(b=>Math.round(14*Math.cbrt(b[3]*b[4]*b[5])**2*2.2/(.0133*LS(b)**2))),im=new T.InstancedMesh(new T.PlaneGeometry(.1,.13),leafMaterial(),per.reduce((a,b)=>a+b,0)),o=new T.Object3D(),col=new T.Color();let k=0;
+  list.forEach(([bx,by,bz,rx,ry,rz],j)=>{Sph(bx,by,bz,rx*.55,TREE_LEAF[0],1,ry/rx,rz/rx);const ls=LS([bx,by,bz,rx]);
+    for(let i=0;i<per[j];i++){const u=r()*2-1,a=r()*PI*2,q=Math.sqrt(1-u*u),nx=q*Math.cos(a),ny=u,nz=q*Math.sin(a),d=.3+.72*Math.sqrt(r());
+      o.position.set(bx+nx*rx*d,by+ny*ry*d,bz+nz*rz*d);o.lookAt(o.position.x+nx+(r()-.5),o.position.y+ny+(r()-.5),o.position.z+nz+(r()-.5));
+      o.rotateZ(r()*PI*2);o.scale.setScalar(ls*(.7+r()*.6));o.updateMatrix();im.setMatrixAt(k,o.matrix);
+      col.copy(LEAF_COL[(r()*5)|0]).multiplyScalar((.45+.7*d)*(.8+.3*ny));im.setColorAt(k++,col);}});
+  im.castShadow=true;root.add(im);}
+function hedge(x0,z0,x1,z1){const n=Math.max(1,Math.round(Math.hypot(x1-x0,z1-z0)/1.1)),l=[];for(let i=0;i<=n;i++){const t=i/n;l.push([x0+(x1-x0)*t,GROUND+.9,z0+(z1-z0)*t,.75,1.125,.75]);}bushLeaves(l,(x0*7+z1*13)|0);}
 hedge(-4.2,-4,-4.2,26);hedge(-4.2,26,20,26);tree(-2.5,20,1.1);tree(3.5,22.5,1.3);tree(9,19,1);tree(-2.8,4,.9);
-for(let i=0;i<5;i++)Sph(.8+i*.5,-.2,12.95,.28,MAT.leafDark);
-Sph(-.9,GROUND+.35,11,.45,MAT.leafDark);Sph(-.9,GROUND+.35,7.5,.45,MAT.leafDark);
+bushLeaves([...Array(5)].map((_,i)=>[.8+i*.5,-.2,12.95,.28,.28,.28]).concat([[-.9,GROUND+.35,11,.45,.45,.45],[-.9,GROUND+.35,7.5,.45,.45,.45]]),77);
 B(10.87,GROUND,-.5,21.44,H+.25,12.74,MAT.extWall);
 const roofGroup=new T.Group();scene.add(roofGroup);
 {const rg=new T.BoxGeometry(22.3,.18,8.2);for(const [z,rx] of [[3.3,.62],[9.6,-.62]]){const m=new T.Mesh(rg,MAT.roof);m.position.set(10.7,H+.25+2.1,z);m.rotation.x=rx;m.castShadow=true;m.receiveShadow=true;roofGroup.add(m);}}
